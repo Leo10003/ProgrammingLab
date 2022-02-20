@@ -3,10 +3,18 @@ class CSVFile():
         self.name=open(name,'r')
     
     def get_data(self):
-        self.c=list(self.name)
-        print(self.c)
+        self.x=[]
+        for line in self.name:
+            self.data= line.split(',')
+
+            if self.data[0] !='Date':
+                self.data[1]=self.data[1].strip()
+                self.x.append(self.data)
+                             
         self.name.close()
+        return self.x
 
 
 file = CSVFile(name='shampoo_sales.csv')
-file.get_data()
+File=file.get_data()
+print(File)
