@@ -8,25 +8,41 @@ class CSVTimeSeriesFile():
         try:
             self.name=open(name, 'r')
         except:
-            raise ExamException('Error, file not found!')
+            raise ExamException('Error, file ({}) not found!\n'.format(name))
 
     def get_data(self):         #Creazione della lista di liste
+       
         self.x=[]               #Nome della lista di liste(x)
         for line in self.name:
             self.data=re.split(r'-|,',line)     #Divisione del file in molteplici parti (anno, mese, valore)
-            self.data[2]=self.data[2].strip()   #Cancellazione del \n alla fine di ogni riga, per evitare problemi nella conversione da stringa a float o int
-            self.data[0]=int(self.data[0])      #Trasformazione di ogni parte della lista da stringa in int
-            self.data[1]=int(self.data[1])
             try:
-                self.data[2]=float(self.data[2])
-                if(self.data[2]==0):
-                    print('il numero e nullo, imposto il numero di default: 1')
-                    self.data=1
-            except ValueError:
-                print('Non potevo convertire la stringa: "{}" in int'.format(self.data[2]))
-                print('Inserisco il numero di default: 1')
-                self.data[2]=1
-            self.x.append(self.data)            #Creazione della lista di liste
+                self.data[2]=self.data[2].strip()   #Cancellazione del \n alla fine di ogni riga, per evitare problemi nella conversione da stringa a float o int
+                self.data[0]=int(self.data[0])      #Trasformazione di ogni parte della lista da stringa in int
+                self.data[1]=int(self.data[1])
+
+                try:
+                    self.data[2]=int(self.data[2])
+                    if(self.data[2]==0):
+                        print('il numero e nullo, imposto il numero di default: 1\n')
+                        self.data[2]=1
+                except ValueError:
+                    print('Non potevo convertire la stringa: "{}" in int\n'.format(self.data[2]))
+                    print('Inserisco il numero di default: 1\n')
+                    self.data[2]=1
+                self.x.append(self.data)            #Creazione della lista di liste
+            except:
+                print('Il linea: "{}" non coincidone con le infomazioni neccesarie, la linea viene saltata di default.\n'.format(line.strip()))
+            
+            
+        i=0
+        for list in self.x:
+            if(self.x[i][1]%12==0):
+                pass
+            elif(self.x[i][1]>self.x[i+1][1]):
+                raise ExamException('I mesi non sono ordinati in modo corretto\n')
+            elif(self.x[i][1]==self.x[i+1][1]):
+                raise ExamException('Ci sono dati duplicati: {}-{},{}\n'.format(self.x[i][0],self.x[i][1],self.x[i][2]))
+            i+=1
         return self.x
         
     def close_file(self):
@@ -103,6 +119,7 @@ def detect_similar_monthly_variations(time_series, years):
 
 time_series_file = CSVTimeSeriesFile(name='data.csv')
 time_series = time_series_file.get_data()
+print(time_series)
 try:
     years=[1950,1950]           #Gli anni ricercati
     if(years[0]+1!=years[1]):
