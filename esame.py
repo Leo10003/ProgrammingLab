@@ -5,7 +5,10 @@ class ExamException(Exception): #Classe delle eccezioni
 
 class CSVTimeSeriesFile():
     def __init__(self, name):   #Apertura e lettura del file
-        self.name=open(name, 'r')
+        try:
+            self.name=open(name, 'r')
+        except:
+            raise ExamException('Error, file not found!')
 
     def get_data(self):         #Creazione della lista di liste
         self.x=[]               #Nome della lista di liste(x)
@@ -14,9 +17,20 @@ class CSVTimeSeriesFile():
             self.data[2]=self.data[2].strip()   #Cancellazione del \n alla fine di ogni riga, per evitare problemi nella conversione da stringa a float o int
             self.data[0]=int(self.data[0])      #Trasformazione di ogni parte della lista da stringa in int
             self.data[1]=int(self.data[1])
-            self.data[2]=int(self.data[2])
+            try:
+                self.data[2]=float(self.data[2])
+                if(self.data[2]==0):
+                    print('il numero e nullo, imposto il numero di default: 1')
+                    self.data=1
+            except ValueError:
+                print('Non potevo convertire la stringa: "{}" in int'.format(self.data[2]))
+                print('Inserisco il numero di default: 1')
+                self.data[2]=1
             self.x.append(self.data)            #Creazione della lista di liste
         return self.x
+        
+    def close_file(self):
+        self.name.close()
 
 def detect_similar_monthly_variations(time_series, years):
     media_anno_1=[]             #Array con i dati finali da confrontare
@@ -30,7 +44,10 @@ def detect_similar_monthly_variations(time_series, years):
     soluzione=[]                #Array al quale viene assegnato il valore True o False rispetto alla condizione del test(il test deve essere maggiore uguale a -2 e minore di 2)
     for i in range(2):          #Ciclo di i per prendere gli anni nell'array years
         print(years[i] , '\n')      #Non neccesario
-        index=[a for a, lst in enumerate(time_series) if years[i] in lst][0]                     #Cerca l'indice esatto di ogni anno in questione per poter trovare gli mesi e i dati dei passegeri
+        try:
+            index=[a for a, list in enumerate(time_series) if years[i] in list][0]                     #Cerca l'indice esatto di ogni anno in questione per poter trovare gli mesi e i dati dei passegeri
+        except TypeError:
+            pass
         for list in time_series:
             if years[i] in list:    #Se vienie trovato l'anno ricercato
                 if(i==0):           #Condizione 1 per il primo anno
@@ -80,11 +97,24 @@ def detect_similar_monthly_variations(time_series, years):
         print(soluzione[mese])                      #Non neccesario
         mese+=1
     
+    time_series_file.close_file()
     return soluzione
         
 
 time_series_file = CSVTimeSeriesFile(name='data.csv')
 time_series = time_series_file.get_data()
-years=[1949,1950]           #Gli anni ricercati
+try:
+    years=[1950,1950]           #Gli anni ricercati
+    if(years[0]+1!=years[1]):
+        print('Gli anni non sono consecutivi')
+        print("L'anno {} e stato cambiato in {}".format(years[1],years[0]+1))
+        years[1]=years[0]+1
+
+    for i in range(2):
+        [a for a, list in enumerate(time_series) if years[i] in list][0]
+except TypeError:
+    pass
+except IndexError:
+    raise ExamException('Error, Anno "{}" non trovato'.format(years[i]))
 detect_similar_monthly_variations(time_series, years)           #Accede alla funzione detect_similar_monthly_variations
 print(detect_similar_monthly_variations(time_series, years))    #Non neccesario
